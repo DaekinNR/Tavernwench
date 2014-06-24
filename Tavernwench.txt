@@ -1,0 +1,73 @@
+on *:TEXT:hello:#: { msg $chan Welcome $nick !
+}
+on *:TEXT:Hi:#: { msg $chan Welcome $nick ! 
+}
+on *:TEXT:hookers:#: { msg $chan hookers $nick can be located in in the parlor. 
+}
+on *:TEXT:whore:#: { msg $chan Your mom is. 
+}
+on *:TEXT:Beer:#: { msg $chan I only serve paying customers. Are you even 21? 
+}
+on *:TEXT:I am 21:#: { msg $chan Well you look like you are 12!
+}
+
+alias -1 addExp {
+  if ($1 !isnum) { echo 2 -st $1 is not a number. It needs to be a number. | halt }
+  var %topic $+($chan,.,$nick)
+  var %Exp $calc($readini(Exp.ini,%topic,Exp) + $1)
+  writeini -n Exp.ini %topic Exp %Exp
+  return %Exp
+}
+alias -1 lookUpExp {
+  var %topic $+($chan,.,$nick)
+  var %Exp $readini(Exp.ini,$topic,Exp)
+  return %Exp
+}
+alias doaddExp {
+  if ($3 !isnum) { echo 2 -st $3 is not a number. It needs to be a number. | halt }
+  var %topic $+($1,.,$2)
+  var %Exp $calc($readini(Exp.ini,%topic,Exp) + $3)
+  writeini -n Exp.ini %topic Exp %Exp
+  echo -a Added Exp for %topic
+}
+alias doremExp {
+  var %topic $+($1,.,$2)
+  remini -n Exp.ini %topic Exp
+  echo -a Removed Exp for %topic
+}
+on $*:text:/!Exp (add|remove)/Si:#:{
+  if ($nick isop #) {
+    if ($0 < 3) { msg # Insufficient parameters: Use !Exp <add|remove> <user> [number] | return }
+    writeini -n Exp.ini $+(#,.,$3) Exp $calc($readini(Exp.ini,$+(#,.,$3),Exp) $iif($2 == add,+,-) $iif($4 isnum,$4,1))
+    { msg $chan $3 now has $readini(Exp.ini,$+(#,.,$3),Exp) total Experience. }
+  }
+  else { msg $chan This command is only available to moderators. }
+}
+on !*:join:#:{
+  $+(.timerExp.,#,.,$nick) 0 300 add.pts $+(#,.,$nick)
+  add.pts $+(#,.,$nick)
+}
+on !*:part:#:$+(.timerExp.,#,.,$nick) off
+alias -l add.pts {
+  writeini -n Exp.ini $1 Exp $calc($readini(Exp.ini,$1,Exp) + 1)
+}
+
+on *:text:!Exp:#:{
+  if ((%floodExp) || ($($+(%,floodExp.,$nick),2))) { return }
+  set -u10 %floodExp On
+  set -u30 %floodExp. $+ $nick On
+  msg # $nick has $readini(Exp.ini,$+(#,.,$nick),Exp) total Exp.
+}
+on *:TEXT:!startlinks:#: {
+  if ($nick isop #) {
+    msg $chan Link cycle is now starting.
+    .timerLinks 0 1800 .play # C:\Users\daekin\AppData\Roaming\mIRC\Links.txt
+  }
+}
+
+on *:TEXT:!chair:#: {
+  if ($nick isop #) {
+    msg $chan Exp cycle is now starting.
+    .timerLinks 0 2400 .play # C:\Users\daekin\AppData\Roaming\mIRC\Exper.txt
+  }
+}
